@@ -827,3 +827,47 @@ $$
 
 ### 4、Softmax回归
 
+多分类问题——Logistics分类的更一般形式
+
+<img src="./assets/image-20231017163437555.png" alt="image-20231017163437555"  />
+
+使用的损失函数
+$$
+L(\hat y,y)=-\sum_{j=1}^Cy_j\cdot log\ \hat y_j
+$$
+
+### 5、TensorFlow 框架
+
+简单示例代码
+
+```python
+import numpy as np
+import tensorflow as tf
+
+cofficients = np.array([[1.],[-10.],[25.]])
+
+w = tf.Variable(0,dtype=tf.float32)
+x = tf.placeholder(tf.float32,[3,1]) #placeholder——可以后续赋值的
+#cost = tf.add(tf.add(w**2,tf.multiply(-10,w)),25)
+#cost = w**2 - 10*w +25
+cost = x[0][0]*w**2 + x[1][0]*w + x[2][0]
+train = tf.train.GradientDescentOptimizer(0.01).minimize(cost)
+
+#全局变量等
+init = tf.global_variables_initializer()
+session = tf.Session()
+session.run(init)
+print(session.run(w))
+
+#运行1次
+session.run(train, feed_dict=(x:coefficients))
+print(session.run(w))
+
+#运行1000次
+for i in range(1000):
+    session.run(train, feed_dict=(x:coefficients))
+print(session.run(w))
+```
+
+
+
