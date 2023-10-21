@@ -871,3 +871,12 @@ print(session.run(w))
 
 
 
+
+
+# 第三门课 **结 构 化 机 器 学 习 项 目**（Structuring Machine Learning Projects）
+
+
+
+## 一、机器学习策略(上)
+
+### 1、Why ML Strategy
