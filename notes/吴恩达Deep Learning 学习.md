@@ -880,3 +880,45 @@ print(session.run(w))
 ## 一、机器学习策略(上)
 
 ### 1、Why ML Strategy
+
+目的：使用快速、有效的策略来优化机器学习模型
+
+### 2、Strategy 1：正交化
+
+Orthogonalization的核心在于**每次调试一个参数只会影响模型的某一个性能**。例如老式电视机旋钮，每个旋钮就对应一个功能，调整旋钮会调整对应的功能，而不会影响其它功能。也就是说**彼此旋钮之间是互不影响的，是正交的**
+
+
+
+对应到机器学习监督式学习模型中，可以大致分成四个独立的“功能”，每个“功能”对应一些可调节的唯一的旋钮。四个“功能”如下：
+
+- **Fit training set well on cost function**
+- **Fit dev set well on cost function**
+- **Fit test set well on cost function**
+- **Performs well in real world**
+
+| 旋钮                      | 解决方法                                           | 考虑解决的问题                                               |
+| ------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| Training Set   对应“旋钮” | Larger Network ; Different Optimization(like Adam) | 解决模型过于简单问题/Human-level与Traning error差距过大，超过Dev error与Training error的差距 |
+| Dev Set  对应“旋钮”       | more training samples ; Regularization（正则化）   | 解决过拟合问题                                               |
+| Test Set  对应“旋钮”      | more dev set samples                               | 解决dev set测得可能不够充分问题                              |
+| Real Work     对应“旋钮”  | change test set ; use new cost function            | 解决cost可能跟实际不符问题/test set分布跟实际不符            |
+
+
+
+### 3、Strategy 2：单值评价指标
+
+将多指标的评价**整合成一个指标**，用以迅速评价哪个模型更好
+
+- 1个作为优化指标（e.g Optimize accuracy），其他作为满足指标（e.g. $time \leq 100ms$）
+- 各指标加权作为最终指标
+- ...
+
+
+
+### 4、Strategy 3：设立Train,Dev,Test Set
+
+- Dev与Test Set的数据分布要近似一致（随机分配到两边）
+
+
+
+## 二、机器学习策略(下)
