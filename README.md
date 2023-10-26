@@ -15,3 +15,15 @@
 git clone https://github.com/qbdl/deeplearning-ai-Notes-Homework.git
 ```
 
+
+
+## 课程笔记
+
+见`notes\吴恩达Deep Learning 学习.pdf`
+
+
+
+## 课程代码（未填写版）
+
+百度网盘链接：https://pan.baidu.com/s/1p55-fcvK3-tmKgro84H1Bg?pwd=ig0x 
+	提取码：ig0x
