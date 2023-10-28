@@ -922,3 +922,82 @@ Orthogonalization的核心在于**每次调试一个参数只会影响模型的�
 
 
 ## 二、机器学习策略(下)
+
+### 1、错误分析（error analysis）
+
+人工**从错误样本中进行统计**，判断其是受到了什么的影响，列一个表，从中找到主要影响因素并进行优化。
+
+```
+	我们可以从分类错误的样本中统计出狗类的样本数量。根据狗类样本所占的比重，判断这一问题的重要性。假如狗类样本所占比重仅为5%，即时我们花费几个月的时间扩大狗类样本，提升模型对其识别率，改进后的模型错误率最多只会降低到9.5%。相比之前的10%，并没有显著改善。我们把这种性能限制称为ceiling on performance。相反，假如错误样本中狗类所占比重为50%，那么改进后的模型错误率有望降低到5%，性能改善很大。因此，值得去花费更多的时间扩大狗类样本。
+```
+
+作出统计表，如下：
+
+<img src="./assets/image-20231026101838336.png" alt="image-20231026101838336" style="zoom:80%;" />
+
+![image-20231026102240186](./assets/image-20231026102240186.png)
+
+### 2、清除错误标记的数据
+
+统计**dev sets中所有分类错误的样本**中**incorrectly labeled data所占的比例**，看其占error rate的占比来决定是否特地处理错误标记数据
+
+注意，系统性标记错误是需要处理的，e.g 白色的狗都标记成猫
+
+
+
+### 3、Training and testing on different distribution
+
+<img src="./assets/image-20231028101419304.png" alt="image-20231028101419304" style="zoom:80%;" />
+
+以猫类识别为例，train set来自于网络下载（webpages），图片比较清晰；dev/test set来自用户手机拍摄（mobile app），图片比较模糊。假如train set的大小为200000，而dev/test set的大小为10000，显然train set要远远大于dev/test set。
+
+此时的**推荐做法**为：**train为网络下载(+手机拍摄）,dev/test全为手机拍摄（确保目标的数据分布与实际相同）**
+
+
+
+### 4、 Bias and Variance with mismatched data distributions
+
+当train set与dev/test set的数据分布不匹配时，如何分析Bias（human level & train error）和Variance(train error& dev error)并进行调整
+
+例如某个模型
+
+| Error Type        | Error Rate |
+| ----------------- | ---------- |
+| human-level error | 0%         |
+| training error    | 1%         |
+| dev error         | 10%        |
+
+根据我们之前的理解，若数据分布一致，显然该模型出现了variance。
+
+但是由于train与dev分布不同，所以此时的9%有两种可能：
+
+- **由于train没有见过dev的数据而导致的error**
+- **单纯由于数据分布不同而导致的error**
+
+所以，引入 **train-dev set**（从train中shuffle中一部分数据，不进行训练，用于测试），用于检测是不是第一种可能。
+
+举例说明，
+
+| Exp1               |                                                            |      | Exp2               |                                                              |
+| ------------------ | ---------------------------------------------------------- | ---- | ------------------ | ------------------------------------------------------------ |
+| training error     | 1%                                                         |      | training error     | 1%                                                           |
+| training-dev error | 9%                                                         |      | training-dev error | 1.5%                                                         |
+| dev error          | 10%                                                        |      | dev error          | 10%                                                          |
+| 结论               | （8%说明没讲过数据对结果影响较大）**variance问题比较突出** |      | 结论               | （8.5差距说明是因为数据分布不一致导致的问题）**data mismatch problem比较突出** |
+
+<img src="./assets/image-20231028103035322.png" alt="image-20231028103035322" style="zoom: 67%;" />
+
+
+
+### 5、解决数据分布不匹配问题
+
+方法：采用 **error analysis** 去分析出主要影响因素，比如train set与dev set的区别在哪里，更具体地，
+
+- **Make training data more similar**
+  - **人工数据合成**的方法（artificial data synthesis）。例如说话人识别问题，实际应用场合（dev/test set）是包含背景噪声的，而训练样本train set很可能没有背景噪声。为了让train set与dev/test set分布一致，我们可以在train set上人工添加背景噪声，合成类似实际场景的声音。
+  - 不能给每段语音都增加同一段背景噪声，这样会出现对背景噪音的**过拟合**，效果不佳。这就是人工数据合成需要注意的地方。
+- **collect more data similar to dev/test sets**
+
+
+
+### 6、
