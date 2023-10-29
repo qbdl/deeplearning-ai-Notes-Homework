@@ -1000,4 +1000,63 @@ Orthogonalization的核心在于**每次调试一个参数只会影响模型的�
 
 
 
-### 6、
+### 6、迁移学习 Transfer Learning
+
+将已经训练好的模型的一部分知识（网络结构）直接应用到另一个类似模型中去。
+
+如果我们已经有一个训练好的神经网络，用来做图像识别。现在，我们想要构建另外一个通过X光片进行诊断的模型。迁移学习的做法是**无需重新构建新的模型**，而是利用之前的神经网络模型，**只改变样本输入、输出以及输出层的权重系数W[L], b[L]**。也就是说**对新的样本(X,Y)，重新训练**输出层权重系数W[L], b[L]，而**其它层所有的权重系数W[l], b[l]保持不变**。
+<img src="./assets/image-20231029143037699.png" alt="image-20231029143037699" style="zoom:80%;" />
+
+**适用场景：**
+
+- Task A and B have the **same input x.**
+
+
+- You have a lot **more data for Task A** than Task B.
+
+
+- **Low level features from A could be helpful for learning B.**
+  - 例如，神经网络浅层部分能够**检测出许多图片固有特征**，e.g. 图像边缘、曲线等。而使用之前训练好的神经网络部分（原有训练图像识别）结果有助于我们更快更准确地提取X光片特征。
+
+
+
+### 7、多任务学习（multi-task learning）
+
+构建神经网络同时执行多个任务。这跟二元分类或者多元分类都不同，多任务学习类似将多个神经网络融合在一起，用一个网络模型来实现多种分类效果。如果有C个，那么输出y的维度是(C,1)。例如汽车自动驾驶中，需要实现的多任务为行人、车辆、交通标志和信号灯。如果检测出汽车和交通标志，则y为：
+$$
+y=
+\left[
+ \begin{matrix}
+   0\\
+   1\\
+   1\\
+   0
+  \end{matrix}
+  \right]
+$$
+**适用场景：**
+
+- Training on a set of tasks that could benefit from having **shared lower-level features**.
+- Usually: **Amount of data** you have for each task is **quite similar**.
+- Can train a **big enough neural network to do well on all the tasks**.
+
+
+
+### 8、端到端深度学习 End-to-End
+
+将所有不同阶段的数据处理系统或学习系统模块组合在一起，用一个单一的神经网络模型来实现所有的功能。它将所有模块混合在一起，**只关心输入和输出**。
+
+<img src="./assets/image-20231029144933458.png" alt="image-20231029144933458" style="zoom:80%;" />
+
+**优点：**
+
+- **Let the data speak**
+- **Less hand-designing of components needed**
+
+**缺点：**
+
+- **May need large amount of data**
+- **Excludes potentially useful hand-designed**
+
+
+
