@@ -1064,4 +1064,127 @@ $$
 
 ## 一、卷积神经网络基础
 
-### 1、
+### 1、边缘检测&卷积
+
+<img src="./assets/image-20231121101704299.png" alt="image-20231121101704299" style="zoom:80%;" />
+
+#### 边缘检测器设计的原因：
+
+其实目的就是要找出变化/突变的边，可以近似转换成两侧的差值->即两侧的值同样权值进行对减，
+
+又因为是减法，所以就把一侧的权重换成相反数，然后统一成加法即可。
+
+即上面见到的
+$$
+\left(\begin{matrix}
+1 & 0 & -1\\
+1 & 0 & -1\\
+1 & 0 & -1\\
+\end{matrix}\right)
+$$
+
+
+#### 其他常见边缘检测器：
+
+<img src="./assets/image-20231121101746159.png" alt="image-20231121101746159" style="zoom:80%;" />
+
+
+
+#### 相关系数（cross-correlations）与卷积（convolutions）的区别：
+
+- 真正的**卷积**运算会先将**filter绕其中心旋转180度**，**然后再将旋转后的filter在原始图片上进行滑动计算**。filter旋转如下所示：
+
+<img src="./assets/image-20231121103101647.png" alt="image-20231121103101647" style="zoom: 67%;" />
+
+- **相关系数的计算过程则不会对filter进行旋转**，而是**直接在原始图片上进行滑动计算**。
+
+但是，为了简化计算，我们一般把CNN中的这种“相关系数”就称作卷积运算。之所以可以这么等效，是因为滤波器算子一般是水平或垂直对称的，180度旋转影响不大；而且最终滤波器算子需要通过CNN网络梯度下降算法计算得到，旋转部分可以看作是包含在CNN模型算法中。总的来说，忽略旋转运算可以大大提高CNN网络运算速度，而且不影响模型性能。
+
+
+
+### 2、三维卷积
+
+<img src="./assets/image-20231121104527894.png" alt="image-20231121104527894" style="zoom:80%;" />
+
+
+
+
+
+### 3、卷积神经网络
+
+#### 卷积层 Convolution
+
+<img src="./assets/image-20231126135217190.png" alt="image-20231126135217190" style="zoom:80%;" />
+
+##### 一些符号设定
+
+设层数为 $l$ ,
+$$
+\begin{align}
+& f^{[l]} = \text{filter size} \\
+& p^{[l]} = \text{padding} \\
+& s^{[l]} = \text{stride} \\
+& n_c^{[l]} = \text{number of filters}
+\end{align}
+$$
+
+**输入维度**为：\( $n_H^{[l-1]} \times n_W^{[l-1]} \times n_c^{[l-1]}$ \)
+
+每个**滤波器组维度**为：\( $f^{[l]} \times f^{[l]} \times n_c^{[l-1]}$ \)
+
+**权重维度**为：\( $f^{[l]} \times f^{[l]} \times n_c^{[l-1]} \times n_c^{[l]}$ \)
+
+**偏置维度**为：\( $1 \times 1 \times 1 \times n_c^{[l]}$ \)
+
+**输出维度**为：\( $n_H^{[l]} \times n_W^{[l]} \times n_c^{[l]} $\)
+
+其中，
+
+$$
+\begin{align}
+& n_H^{[l]} = \left\lfloor \frac{n_H^{[l-1]} + 2p^{[l]} - f^{[l]}}{s^{[l]}} + 1 \right\rfloor \\
+& n_W^{[l]} = \left\lfloor \frac{n_W^{[l-1]} + 2p^{[l]} - f^{[l]}}{s^{[l]}} + 1 \right\rfloor
+\end{align}
+$$
+
+如果有 m 个样本，进行向量化运算，相应的输出维度为：\( $m \times n_H^{[l]} \times n_W^{[l]} \times n_c^{[l]}$ \)
+
+
+
+<img src="./assets/image-20231126135407025.png" alt="image-20231126135407025" style="zoom:80%;" />
+
+- 一般而言，随着CNN层数增加，$n_H^{[l]} 和n_W^{[l]} 一般逐渐减小，而n_c^{[l]} 一般逐渐增大$
+
+- **每个filter对应提取的一种特征**，且最后一个维度与上一层的channel维度值一样(确保一个filter纵向层仅一层)
+
+  
+
+#### 池化层 Pooling
+
+就两个参数，**filter_size，stride_size**并且是不需要进行学习的超参数，**一般不使用padding**(即p=0)
+
+**但本质上与Conv一样，也是两个内容作运算，只是做的运算不同**
+
+- Max Pooling
+
+  - Pooling layers的做法比convolution layers简单许多，没有卷积运算，仅仅是在滤波器算子滑动区域内取最大值，即**max pooling，这是最常用的做法**。
+
+    <img src="./assets/image-20231126140752142.png" alt="image-20231126140752142" style="zoom:50%;" />
+
+- Average Pooling
+
+  - 滑动区域里取平均值
+
+  
+
+#### 全连接层 FC
+
+变成一列
+
+
+
+
+
+#### 一个具体完整卷积神经网络的例子（数字识别）
+
+<img src="./assets/image-20231126141145619.png" alt="image-20231126141145619" style="zoom:80%;" />
