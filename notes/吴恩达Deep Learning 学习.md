@@ -1192,3 +1192,178 @@ $$
 
 
 ## 二、深度卷积模型：案例研究
+
+### 1、经典网络
+
+#### LeNet-5
+
+由Yann LeCun教授于1998年提出来的 , 它是第一个成功应用于数字识别问题的卷积神经网络。在MNIST数据中，它的准确率达到大约99.2%。
+
+典型的LeNet-5结构包含CONV layer，POOL layer和FC layer，顺序一般是**CONV layer => POOL layer =>CONV layer => POOL layer => FC layer => FC layer => OUTPUT layer，即y^**。下图所示的是一个数字识别的LeNet-5的模型结构：
+
+<img src="./assets/image-20231214084915343.png" alt="image-20231214084915343" style="zoom:80%;" />
+
+该LeNet模型总共包含了大约6万个参数。值得一提的是，当时Yann LeCun提出的LeNet-5模型池化层使用的是average pool，而且各层激活函数一般是Sigmoid和tanh。现在，我们可以根据需要，做出改进，使用max pool和激活函数ReLU。
+
+
+
+#### AlexNet
+
+Alex Krizhevsky、Ilya Sutskever和Geoffrey Hinton共同提出的，其结构如下所示：
+
+<img src="./assets/image-20231214085103286.png" alt="image-20231214085103286" style="zoom:80%;" />
+
+与LeNet-5模型类似，只是要复杂一些，总共包含了大约6千万个参数。同样可以根据实际情况使用激活函数ReLU。
+
+
+
+#### VGG-16
+
+一般情况下，其CONV layer和POOL layer设置如下：
+
+- **CONV = 3x3 filters, s = 1, same**
+
+- **MAX-POOL = 2x2, s = 2**
+
+<img src="./assets/image-20231214085213105.png" alt="image-20231214085213105" style="zoom:80%;" />
+
+VGG-16的参数多达1亿3千万。
+
+
+
+### 2、残差网络 Residual Networks（ResNets） 
+
+
+
+#### What is ResNets
+
+如果神经网络层数越多，网络越深，源于**梯度消失和梯度爆炸的影响**，整个模型难以训练成功。
+
+解决的方法之一是Residual Networks(ResNets)。
+
+Residual Networks由许多隔层相连的神经元子模块组成，我们称之为Residual block。单个Residual block的结构如下图所示：
+
+<img src="./assets/20171211204756960.png" alt="img" style="zoom:80%;" />
+
+上图中红色部分就是skip connection，直接建立a[l]与a[l+2]之间的隔层联系。相应的表达式如下：
+$$
+\begin{align*}
+&z^{[l+1]}=W^{[l+1]}a^{[l]}+b^{[l+1]}\\
+&a^{[l+1]}=g(z^{[l+1]})\\
+&z^{[l+2]}=W^{[l+2]}a^{[l+1]}+b^{[l+2]}\\
+&a^{[l+2]}=g(z^{[l+2]}+a^{[l]}) （比正常情况多了一个a^{[l]}）\\
+\end{align*}
+$$
+$$a^{[l]}$$直接隔层与下一层的线性输出相连，与$$z^{[l+2]}$$共同通过激活函数（ReLU）输出$$a^{[l+2]}$$。
+
+该模型由Kaiming He, Xiangyu Zhang, Shaoqing Ren和Jian Sun共同提出。由多个Residual block组成的神经网络就是Residual Network。实验表明，这种模型结构对于训练非常深的神经网络，效果很好。另外，为了便于区分，我们把非Residual Networks称为Plain Network。
+<img src="./assets/20171211211417392.png" alt="这里写图片描述" style="zoom:80%;" />
+
+Residual Network的结构如上图所示。
+
+与Plain Network相比，Residual Network能够训练更深层的神经网络，有效避免发生发生梯度消失和梯度爆炸。从下面两张图的对比中可以看出，随着神经网络层数增加，Plain Network实际性能会变差，training error甚至会变大。然而，Residual Network的训练效果却很好，training error一直呈下降趋势。
+<img src="./assets/20171211213835572.png" alt="img" style="zoom:80%;" />
+
+
+
+#### Why ResNets Work?
+
+<img src="./assets/20171211215418919.png" alt="img" style="zoom:80%;" />
+
+普通网络在加上ResNet后如上图所示，
+$$
+a^{[l+2]}=g(z^{[l+2]}+a^{[l]})=g(W^{[l+2]}a^{[l+1]}+b^{[l+2]}+a^{[l]})
+$$
+若$$W^{[l+2]}\approx0,b^{[l+2]}\approx0$$,则有
+$$
+a^{[l+2]}=g(a^{[l]})=ReLU(a^{[l]})=a^{[l]}\ \ \ \ when\ a^{[l]}\geq0
+$$
+意味着残差网络是普通网络的更一般化，并且可以更容易地学习恒等函数（**从该实验结果上看比简单堆叠普通网络效果来的好**），当W,b不为0时，还可能能学习其他有用信息。
+
+
+
+#### CNN中的ResNets
+
+<img src="./assets/20171212142205247.png" alt="img" style="zoom:80%;" />
+
+ResNets同类型层之间，例如CONV layers，大多使用same类型，保持维度相同。如果是不同类型层之间的连接，例如CONV layer与POOL layer之间，如果维度不同，则引入矩阵Ws。
+
+
+
+
+
+### 3、1x1 卷积 
+
+滤波器算子filter的维度为1x1。
+
+1x1 Convolutions的作用实际上可以看作**对 每一长块 做类全连接**。
+
+<img src="./assets/image-20231214093959914.png" alt="image-20231214093959914" style="zoom:80%;" />
+
+同样，它还可以**压缩图片的通道数目**来减少计算。
+
+<img src="./assets/image-20231214094511456.png" alt="image-20231214094511456" style="zoom:80%;" />
+
+
+
+### 4、Inception Network
+
+Inception Network在单层网络上**可以使用多个不同尺寸的filters**，进行same convolutions，**把各filter下得到的输出拼接起来**。除此之外，还可以将CONV layer与POOL layer混合，同时实现各种效果。但是要注意使用same pool。
+
+<img src="./assets/image-20231214102219860.png" alt="image-20231214102219860" style="zoom: 50%;" />
+
+Inception Network**使用不同尺寸的filters并将CONV和POOL混合起来，将所有功能输出组合拼接，再由神经网络本身去学习参数并选择最好的模块（即通过学习filter的参数）。**
+
+
+
+Inception Network在提升性能的同时，会带来**计算量大**的问题。
+
+<img src="./assets/20171212172342457.png" alt="img" style="zoom: 67%;" />
+
+此CONV layer需要的计算量为：28x28x32x5x5x192=120m，其中m表示百万单位。
+
+为此，我们可以**引入1x1 Convolutions来减少其计算量**，
+
+<img src="./assets/20171212175549666.png" alt="img" style="zoom: 50%;" />
+
+
+
+通常我们把该1x1 Convolution称为“瓶颈层”（bottleneck layer）。引入bottleneck layer之后，总共需要的计算量为：28x28x16x192+28x28x32x5x5x16=12.4m。明显地，虽然多引入了1x1 Convolution层，但是总共的计算量减少了近90%，效果还是非常明显的。由此可见，1x1 Convolutions还可以有效减少CONV layer的计算量。
+
+
+
+**引入1x1 Convolution后的Inception module**：
+
+<img src="./assets/20171213204922094.png" alt="这里写图片描述"  />
+
+
+
+**多个Inception modules组成Inception Network：**
+
+<img src="./assets/20171213211346970.png" alt="img" style="zoom:80%;" />
+
+上述Inception Network除了由许多Inception modules组成之外，**网络中间隐藏层也可以作为输出层Softmax，有利于防止发生过拟合。**
+
+
+
+### 5、数据增强
+
+- 常用的Data Augmentation方法是对已有的样本集进行**Mirroring和Random Cropping**
+
+  <img src="./assets/20171214102716526.png" alt="img" style="zoom: 80%;" />
+
+- 另一种Data Augmentation的方法是**color shifting**（对图片的RGB通道数值进行随意增加或者减少，改变图片色调）
+
+  <img src="./assets/20171214104357412.png" alt="img" style="zoom:70%;" />
+
+  - 还可以更有针对性地对图片的RGB通道进行PCA color augmentation，也就是对图片颜色进行主成分分析，对主要的通道颜色进行增加或减少，可以采用高斯扰动做法。这样也能增加有效的样本数量。
+
+
+在构建大型神经网络的时候，**data augmentation和training**可以由**两个不同的线程**来进行，数据增强后的内容传入training线程进行训练。
+
+
+
+
+## 三、目标检测
+
+### 1、目标定位
