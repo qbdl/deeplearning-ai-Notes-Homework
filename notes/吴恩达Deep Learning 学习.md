@@ -1237,9 +1237,11 @@ VGG-16的参数多达1亿3千万。
 
 #### What is ResNets
 
-如果神经网络层数越多，网络越深，源于**梯度消失和梯度爆炸的影响**，整个模型难以训练成功。
+如果神经网络层数越多，网络越深，源于**梯度消失和梯度爆炸的影响**，整个模型难以训练成功。解决的方法之一是Residual Networks(ResNets)。
 
-解决的方法之一是Residual Networks(ResNets)。
+- **普通网络**：from the final layer back to the first layer, you are **multiplying by the weight matrix on each step**, and thus the gradient can decrease **exponentially quickly to zero**
+
+- **ResNets**：**a "shortcut" or a "skip connection" allows the gradient to be directly backpropagated to earlier layers**
 
 Residual Networks由许多隔层相连的神经元子模块组成，我们称之为Residual block。单个Residual block的结构如下图所示：
 
@@ -1367,3 +1369,4 @@ Inception Network在提升性能的同时，会带来**计算量大**的问题�
 ## 三、目标检测
 
 ### 1、目标定位
+
