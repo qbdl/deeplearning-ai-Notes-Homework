@@ -1370,3 +1370,25 @@ Inception Network在提升性能的同时，会带来**计算量大**的问题�
 
 ### 1、目标定位
 
+<img src="./assets/20180110205943876.png" alt="img" style="zoom:80%;" />
+
+<img src="./assets/20180110222709201.png" alt="img" style="zoom:80%;" />
+
+<img src="./assets/image-20231216164132145.png" alt="image-20231216164132145" style="zoom:67%;" />
+
+
+
+对于**损失函数Loss function**，若使用平方误差形式，有两种情况：
+
+<img src="./assets/image-20231216164154380.png" alt="image-20231216164154380" style="zoom: 80%;" />
+
+### 2、特征点检测（Landmark Detection）
+
+除了使用矩形区域检测目标类别和位置外，我们还可以仅对目标的关键特征点坐标进行定位，这些关键点被称为**landmarks**。
+
+<img src="./assets/image-20231216164315410.png" alt="image-20231216164315410" style="zoom:80%;" />
+
+
+
+### 3、目标检测 Object Detection
+
