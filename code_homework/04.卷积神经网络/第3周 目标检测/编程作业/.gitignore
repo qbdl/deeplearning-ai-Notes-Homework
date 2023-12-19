@@ -1,3 +1,6 @@
 nb_images/
 images/
 model_data/
+yad2k/models/__pycache__/
+yad2k/utils/__pycache__/
+__pycache__/
