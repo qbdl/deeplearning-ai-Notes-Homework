@@ -1798,3 +1798,334 @@ $$
 # 第五门课 序列模型—RNN（Sequence Model——Recurrent Neural Networks）
 
 ## 一、循环神经网络（RNN）
+
+### 1、序列模型
+
+#### 例子
+
+![img](./assets/20180305154333482.png)
+
+#### 序列模型的命名规则
+
+示例语句为：Harry Potter and Hermione Granger invented a new spell.
+
+该句话包含9个单词，输出y即为1 x 9向量，每位表征对应单词是否为人名的一部分，1表示是，0表示否。很明显，该句话中“Harry”，“Potter”，“Hermione”，“Granger”均是人名成分，所以，对应的输出y可表示为：
+
+y=[1  1  0  1  1  0  0  0  0]
+一般约定使用$y^{<t>}$表示**序列对应位置t的输出**，$T_{y}$使用表示**输出序列长度**，$T_{x}$使用表示**输入序列长度**，则对于输入x，表示为：
+$$
+[x^{<1>}\ \ x^{<2>}\ \ x^{<3>}\ \ x^{<4>}\ \ x^{<5>}\ \ x^{<6>}\ \ x^{<7>}\ \ x^{<8>}\ \ x^{<9>}]
+$$
+同时，如果是多样本，则使用
+
+-  $X^{(i)<t>}$表示**第i个样本 位置为t的输入**， $y^{(i)<t>}$表示**第i个样本 位置为t的输出**
+
+- $T_{x}^{(i)}$表示**第i个样本的输入序列长度**，$T_{y}^{(i)}$表示**第i个样本的输出序列长度**
+
+
+
+1. 如何来表示每个呢？方法是首先建立**一个词汇库vocabulary**，尽可能包含更多的词汇。例如一个包含10000个词汇的词汇库为：
+   $$
+   \left[
+   \begin{matrix}
+   a \\
+   and \\
+   \cdot \\
+   \cdot \\
+   \cdot \\
+   harry \\
+   \cdot \\
+   \cdot \\
+   \cdot \\
+   potter \\
+   \cdot \\
+   \cdot \\
+   \cdot \\
+   zulu
+   \end{matrix}
+   \right]
+   $$
+   
+
+2. 然后使用**one-hot编码**，例句中的每个单词都可以表示成10000 x 1的向量，词汇表中与对应的位置为1，其它位置为0。该为one-hot向量。如果出现词汇表之外的单词，可以使用UNK或其他字符串来表示。
+
+
+
+### 2、RNN(Recurrent Neural Network Model)
+
+对于序列模型，如果使用**标准的神经网络**
+
+![img](./assets/20180305180556590.png)
+
+存在两个问题：
+
+1. 不同样本的**输入序列长度或输出序列长度不同**，解决办法之一是设定一个最大序列长度，需要padding，但是这种做法实际效果并不理想。
+2. 也是主要问题，**这种标准神经网络结构无法共享序列不同之间的特征。**例如，如果某个即“Harry”是人名成分，那么句子其它位置出现了“Harry”，也很可能也是人名。这是共享特征的结果，如同CNN网络特点一样。但是，上图所示的网络不具备共享特征的能力。共享特征还有助于减少神经网络中的参数数量，一定程度上减小了模型的计算复杂度。
+   
+
+所以，提出了RNN来解决序列问题
+
+#### RNN
+
+##### 模型结构
+
+<img src="./assets/20180305203908747.png" alt="img" style="zoom:80%;" />
+
+序列模型**从左到右，依次传递**，其中，$a^{<0>}$一般为零向量。
+
+RNN模型包含**三类权重系数**，分别是$W_{aa}$，$W_{ax}$，$W_{ya}$。且**不同元素之间同一位置共享同一权重系数**。
+
+​	附：$W_{ax}$表示右边乘以的是x的类型变量，生成的是a类型的变量，其他同理。
+
+<img src="./assets/20180305212325555.png" alt="img" style="zoom:80%;" />
+
+
+
+##### 正向传播过程
+
+$$
+\begin{align*}
+& a^{<t>}=g_1(W_{aa}\cdot a^{<t-1>}+W_{ax}\cdot x^{<t>}+b_a)\\
+& \hat y^{<t>}=g_2(W_{ya}\cdot a^{<t>}+b_y)
+\end{align*}
+$$
+
+为了简化表达式，可以对项进行整合：
+$$
+W_{aa}\cdot a^{<t-1>}+W_{ax}\cdot x^{<t>}=[W_{aa}\ \ W_{ax}]\left[
+\begin{matrix}
+a^{<t-1>} \\
+x^{<t>}
+\end{matrix}
+\right]\rightarrow W_a[a^{<t-1>},x^{<t>}]
+$$
+则**正向传播**可表示为：
+$$
+\begin{align*}
+& a^{<t>}=g(W_a[a^{<t-1>},x^{<t>}]+b_a)\\
+& \hat y^{<t>}=g(W_{y}\cdot a^{<t>}+b_y)
+\end{align*}
+$$
+
+
+​	附：以上所述的RNN为单向RNN，即按照从左到右顺序，单向进行，只与左边的元素有关。但是，有时候也可能与右边元素有关。例如下面两个句子中，单凭前三个单词，无法确定“Teddy”是否为人名，必须根据右边单词进行判断。
+
+`He said, “Teddy Roosevelt was a great President.”`
+	`He said, “Teddy bears are on sale!”`
+
+​	因此，有另外一种RNN结构是双向RNN，简称为BRNN。与左右元素均有关系,在后续中会介绍。
+
+
+##### 反向传播过程 Backpropagation through Time
+
+**1、共用$W_{a},b_a$,计算出$a^{<t>}$**
+
+<img src="./assets/image-20231224155326610.png" alt="image-20231224155326610" style="zoom:80%;" />
+
+**2、共用$W_{y},b_y$,计算出$\hat y^{<t>}$**
+
+<img src="./assets/image-20231224155339122.png" alt="image-20231224155339122" style="zoom:80%;" />
+
+**3、生成损失函数L**
+
+单个元素的Loss function为交叉熵损失函数：
+$$
+L^{<t>}(\hat y^{<t>},y^{<t>})=-y^{<t>}log\ \hat y^{<t>}-(1-y^{<t>})log\ (1-\hat y^{<t>})
+$$
+该样本所有元素的Loss function为：
+$$
+L(\hat y,y)=\sum_{t=1}^{T_y}L^{<t>}(\hat y^{<t>},y^{<t>})
+$$
+<img src="./assets/image-20231224155349889.png" alt="image-20231224155349889" style="zoom:67%;" />
+
+**4、从右到左分别计算对参数$W_{aa}$，$W_{ax}$，$W_{ya}$的偏导数**
+
+<img src="./assets/image-20231224155355003.png" alt="image-20231224155355003" style="zoom:67%;" />
+
+
+
+#### 各类型的RNN
+
+<img src="./assets/20180306101623714.png" alt="img" style="zoom:90%;" />
+
+
+
+### 3、语言模型与句子生成
+
+#### 语言模型做的事
+
+**预测一个语句出现的概率 P(sentence)**,类似下面条件概率的计算公式
+$$
+P(y^{<1>},y^{<2>},y^{<3>})=P(y^{<1>})\cdot P(y^{<2>}|y^{<1>})\cdot P(y^{<3>}|y^{<1>},y^{<2>})
+$$
+
+#### 如何建立一个language model
+
+1、需要一个足够大的训练集，训练集由大量的单词语句语料库（corpus）构成。然后，对corpus的每句话进行切分词（tokenize）。做法就跟第1节介绍的一样，建立vocabulary，对每个单词进行one-hot编码。
+
+例如下面这句话：
+
+`The Egyptian Mau is a bread of cat.`
+
+One-hot编码已经介绍过了，不再赘述。还需注意的是，每句话结束末尾，需要加上< EOS >作为语句结束符。另外，若语句中有词汇表中没有的单词，用< UNK >表示。假设单词“Mau”不在词汇表中，则上面这句话可表示为：
+
+`The Egyptian < UNK > is a bread of cat. < EOS >`
+	
+
+2、准备好训练集并对语料库进行切分词等处理之后，接下来构建相应的RNN模型。
+
+<img src="./assets/20180306150119313.png" alt="img" style="zoom: 80%;" />
+
+Softmax输出层 $\hat{y}{^{<1>}}$ 表示出现该语句**第一个单词的概率**，softmax输出层  $\hat{y}{^{<2>}}$  表示在第一个单词基础上出现第二个单词的概率，即**条件概率！**，以此类推，最后是出现**< EOS >**的条件概率。
+
+
+
+3、损失函数
+
+单个元素的softmax loss function为：
+$$
+L^{<t>}(\hat y^{<t>},y^{<t>})=-\sum_iy_i^{<t>}log\ \hat y_i^{<t>}
+$$
+该样本所有元素的Loss function为：
+$$
+L(\hat y,y)=\sum_tL^{<t>}(\hat y^{<t>},y^{<t>})
+$$
+
+
+#### 如何对建立的RNN模型进行采样
+
+利用训练好的RNN语言模型，可以进行新的序列采样，从而随机产生新的语句。
+
+<img src="./assets/image-20231225170904186.png" alt="image-20231225170904186" style="zoom:80%;" />
+
+1. 根据输出的$\hat y^{<t>}$的值（sigmoid分布）来对词汇表进行**随机采样**，
+2. 并将得到的结果（例如“The")的one-hot编码作为输入传入下一层，以此类推，
+3. 直到产生< EOS >结束符，语句生成完毕。也可以设定语句长度上限，达到长度上限即停止生成新的单词。
+4. 最终，根据随机选择的首单词，RNN模型会生成一条新的语句。
+
+
+
+#### RNN模型的梯度问题
+
+语句中可能存在跨度很大的依赖关系，即某个word可能与它距离较远的某个word具有强依赖关系。例如下面这两条语句：
+
+The **cat**, which already ate fish, **was** full.
+
+The **cats**, which already ate fish, **were** full.
+
+第一句话中，was受cat影响；第二句话中，were受cats影响。它们之间都跨越了很多单词。而**一般的RNN模型每个元素受其周围附近的影响较大，难以建立跨度较大的依赖性**。上面两句话的这种依赖关系，由于跨度很大，**普通的RNN网络容易出现梯度消失，捕捉不到它们之间的依赖，造成语法错误。**
+
+
+##### RNN的梯度爆炸问题
+
+常用的解决办法是设定一个阈值，**一旦梯度最大值达到这个阈值**，就对整个梯度向量进行尺度缩小。这种做法被称为gradient clipping。
+
+
+
+##### RNN的梯度消失问题
+
+常用解决方法：
+
+- GRU(Gated Recurrent Unit) 门控循环单元
+- LSTM(Long Short Term Memory)  长短时期记忆
+
+###### GRU(simplified)
+
+GRU实际上就是对RNN的隐藏层进行修改，
+
+**原始RNN的隐藏层单元：**
+$$
+a^{<t>}=tanh(W_a[a^{<t-1>},x^{<t>}]+b_a)
+$$
+<img src="./assets/image-20231225173751406.png" alt="image-20231225173751406" style="zoom: 67%;" />
+
+**GRU：**
+
+为了解决梯度消失问题，对上述单元进行修改，**添加了记忆单元C**，构建GRU,并且引入$\tilde C$ 表示候选值。
+$$
+\tilde c^{<t>}=tanh(W_c[c^{<t-1>},x^{<t>}]+b_c)\\
+\Gamma_u=\sigma(W_u[c^{<t-1>},x^{<t>}]+b_u)\\
+c^{<t>}=\Gamma_u*\tilde c^{<t>}+(1-\Gamma_u)*c^{<t-1>}
+$$
+<img src="./assets/20180306222806695.png" alt="img" style="zoom:80%;" />
+
+其中，使用$\Gamma_u$表示是否要更新$c^{<t>}$
+
+由于sigmoid函数的特性，所以$\Gamma_u$的值绝大多数会极接近1/0，当$\Gamma_u$的值为0时，即学习到了恒等函数，$c^{<t>}=c^{<t-1>}$
+
+<img src="./assets/image-20231225182423041.png" alt="image-20231225182423041" style="zoom: 67%;" />
+
+这一点跟CNN中的ResNets的作用有点类似(更容易学习到恒等函数)。因此，能够保证RNN模型中跨度很大的依赖关系不受影响，一定程度上消除梯度消失问题。
+
+
+
+###### GRU(Full)
+
+完整的GRU添加了另外一个gate$\Gamma_r$ ，对$c^{<t-1>}$进行门控（实验证明效果更好）。
+$$
+\begin{align*}
+& \tilde c^{<t>}=tanh(W_c[\Gamma_r*c^{<t-1>},x^{<t>}]+b_c)\\
+& \Gamma_u=\sigma(W_u[c^{<t-1>},x^{<t>}]+b_u) \\
+& \Gamma_r=\sigma(W_r[c^{<t-1>},x^{<t>}]+b_r) \\
+& c^{<t>}=\Gamma_u*\tilde c^{<t>}+(1-\Gamma_u)*c^{<t-1>} \\
+& a^{<t>}=c^{<t>}
+\end{align*}
+$$
+优点：相比于LSTM更简单
+
+###### LSTM
+
+比GRU更灵活强大。
+
+隐藏层单元结构：与GRU的区别在于直接使用了$a^{<t-1>}$而不是$c^{<t-1>}$,并且使用了两个门来生成$c^{<t>}$，$c^{<t>}$到$a^{<t>}$也使用了一个门。
+$$
+\begin{align*}
+
+& \tilde c^{<t>}=tanh(W_c[a^{<t-1>},x^{<t>}]+b_c)\\
+& \Gamma_u=\sigma(W_u[a^{<t-1>},x^{<t>}]+b_u) \\
+& \Gamma_f=\sigma(W_f[a^{<t-1>},x^{<t>}]+b_f) \\
+& \Gamma_o=\sigma(W_o[a^{<t-1>},x^{<t>}]+b_o) \\
+& c^{<t>}=\Gamma_u*\tilde c^{<t>}+\Gamma_f*c^{<t-1>} \\
+& a^{<t>}=\Gamma_o*c^{<t>}
+
+\end{align*}
+$$
+<img src="./assets/20180307093928657.png" alt="img" style="zoom:80%;" />
+
+### 4、RNN进化
+
+#### 双向RNN (Bidirectional RNN) 
+
+$$
+\hat y^{<t>}=g(W_{y}[a^{\rightarrow <t>},a^{\leftarrow <t>}]+b_y)
+$$
+
+<img src="./assets/image-20231225185012800.png" alt="image-20231225185012800" style="zoom:80%;" />
+
+BRNN能够同时对序列进行双向处理，性能大大提高。但是计算量较大，且在处理实时语音时，需要等到完整的一句话结束时才能进行分析。
+
+
+
+#### 深层RNN (Deep RNNs)
+
+Deep RNNs由多层RNN组成
+
+<img src="./assets/20180307135925557.png" alt="img" style="zoom:80%;" />
+
+与DNN一样，用上标$^{[l]}$表示层数。Deep RNNs中的表达式为：
+$$
+a^{[l]<t>}=g(W_a^{[l]}[a^{[l]<t-1>},a^{[l-1]<t>}]+b_a^{[l]})
+$$
+DNN层数可达100多，而Deep RNNs一般没有那么多层，3层RNNs已经较复杂了。
+
+
+
+另外一种Deep RNNs结构是每个输出层上还有一些垂直单元，如下图所示：
+
+<img src="./assets/20180307142001127.png" alt="img" style="zoom:80%;" />
+
+
+
+## 二、NLP & Word Embeddings
+
+### 1、词汇表征 Word Representation
