@@ -1661,7 +1661,7 @@ $$
 **每组训练样本包含两张图片，每个siamese网络结构和参数完全相同**。这样就把人脸识别问题转化成了一个二分类问题。引入逻辑输出层参数w和b，输出表达式为：
 $$
 \hat y=\sigma(\sum_{k=1}^Kw_k|f(x^{(i)})_k-f(x^{(j)})_k|+b) \quad \mathbf{or} \\
-\hat y=\sigma(\sum_{k=1}^Kw_k\frac{(f(x^{(i)})_k-f(x^{(j)})_k)^2}{f(x^{(i)})_k+f(x^{(j)})_k}+b)
+\hat y=\sigma(\sum_{k=1}^Kw_k\frac{(f(x^{(i)})_k-f(x^{(j)})_k)^2}{f(x^{(i)})_k+f(x^{(j)})_k}+b)
 $$
 其中参数和都是通过梯度下降算法迭代训练得到。
 
@@ -1761,7 +1761,7 @@ $$
 
 公式为：
 $$
- r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \sum_{i=1}^{n}(y_i - \bar{y})^2}}
+ r = \frac{\sum_{i=1}^{n}(x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum_{i=1}^{n}(x_i - \bar{x})^2 \sum_{i=1}^{n}(y_i - \bar{y})^2}}
 $$
  其中，n是样本大小，$x_i$ 和  $y_i$ 分别是第 i 个样本点的两个变量的取值， $\bar{x} $ 和  $\bar{y} $ 分别是两个变量的样本均值。
 
@@ -1846,7 +1846,6 @@ $$
    \right]
    $$
    
-
 2. 然后使用**one-hot编码**，例句中的每个单词都可以表示成10000 x 1的向量，词汇表中与对应的位置为1，其它位置为0。该为one-hot向量。如果出现词汇表之外的单词，可以使用UNK或其他字符串来表示。
 
 
@@ -2129,3 +2128,144 @@ DNN层数可达100多，而Deep RNNs一般没有那么多层，3层RNNs已经较
 ## 二、NLP & Word Embeddings
 
 ### 1、词汇表征 Word Representation
+
+由于one-hot编码仅表示了区别，并没有办法编码一些相似的信息，例如”梨“与”苹果“的相似性等（每个单词都是独立的、正交的，无法知道不同单词之间的相似程度），所以引入**特征表征（Featurized representation）**
+
+也就是使用一个**特征向量表征单词**，特征向量的每个元素都是对该单词某一特征的量化描述，量化范围可以是[-1,1]之间。特征表征的例子如下图所示：
+
+<img src="./assets/20180322093858543.png" alt="img"  />
+
+这种特征表征的优点是根据特征向量能清晰知道不同单词之间的相似程度，例如Apple和Orange之间的相似度较高，很可能属于同一类别。这种单词“类别”化的方式，大大**提高了有限词汇量的泛化能力。**
+
+这种**特征化单词的操作**被称为**Word Embeddings**，即**单词嵌入**。
+
+
+
+#### 使用Word Embedding
+
+- 从海量词汇库中学习word embeddings，即所有单词的特征向量。或者从网上下载预训练好的word embeddings。
+- 使用较少的训练样本，将word embeddings迁移到新的任务中。
+- （可选）：继续使用新数据微调word embeddings。
+
+**优点：**
+
+之前我们介绍过Named entity识别的例子，每个单词采用的是one-hot编码。如下图所示，因为“orange farmer”是份职业，很明显“Sally Johnson”是一个人名。
+
+<img src="./assets/2018032213525864.png" alt="img" style="zoom:67%;" />
+
+如果采用featurized representation对每个单词进行编码，再构建该RNN模型。对于一个新的句子：
+
+`Robert Lin is an apple farmer`
+
+由于这两个句子中，**“apple”与“orange”特征向量很接近，很容易能判断出“Robert Lin”也是一个人名**。
+
+
+#### Word Embedding的特性
+
+可以用于学习**类比问题**，利用向量的差值近似
+
+<img src="./assets/20180322211419261.png" alt="img" style="zoom:80%;" />
+
+将“Man”的embedding vector与“Woman”的embedding vector相减：
+$$
+e_{man}-e_{woman}=\left[
+\begin{matrix}
+-1 \\
+0.01 \\
+0.03 \\
+0.09
+\end{matrix}
+\right]-\left[
+\begin{matrix}
+1 \\
+0.02 \\
+0.02 \\
+0.01
+\end{matrix}
+\right]\approx\left[
+\begin{matrix}
+-2 \\
+0 \\
+0 \\
+0
+\end{matrix}
+\right]
+$$
+将“King”的embedding vector与“Queen”的embedding vector相减：
+$$
+e_{king}-e_{queen}=\left[
+\begin{matrix}
+-0.95 \\
+0.93 \\
+0.70 \\
+0.02
+\end{matrix}
+\right]-\left[
+\begin{matrix}
+0.97 \\
+0.95 \\
+0.69 \\
+0.01
+\end{matrix}
+\right]\approx\left[
+\begin{matrix}
+-2 \\
+0 \\
+0 \\
+0
+\end{matrix}
+\right]
+$$
+画图的话则是：
+
+![img](./assets/2018032221344573.png)
+$$
+e_?=e_{king}-e_{man}+e_{woman}
+$$
+采用sin/cos等函数来测量**词汇表里的e值与指定的e?的相近程度**，进而**得出类比答案**。
+
+
+
+#### Embedding Matrix
+
+假设某个词汇库包含了10000个单词，每个单词包含的特征维度为300，那么表征所有单词的embedding matrix维度为300 x 10000。
+
+某单词w的one-hot向量表示为$O_w$，维度为10000 x 1，则该单词的embedding vector表达式（取出所在列）：
+$$
+e_w=E\cdot O_w
+$$
+
+
+#### Learning word embeddings
+
+embedding matrix 可以通过构建自然语言模型，运用梯度下降算法得到。
+
+举个简单的例子，输入样本是下面这句话：
+
+`I want a glass of orange (juice).`
+
+通过这句话的前6个单词，预测最后的单词“juice”。未知待求，每个单词可用embedding vector 表示。构建的神经网络模型结构如下图所示：
+
+<img src="./assets/20180323142329406.png" alt="img" style="zoom:80%;" />
+
+神经网络输入层包含6个embedding vactors，每个embedding vector维度是300，则输入层总共有1800个输入。Softmax层有10000个概率输出，与词汇表包含的单词数目一致。正确的输出label是“juice”。其中为待求值。对足够的训练例句样本，运用梯度下降算法，迭代优化，最终求出embedding matrix 。
+
+
+
+为了让神经网络**输入层数目固定**，可以选择只取预测单词的前n个单词作为输入，例如该句中只选择“a glass of orange”四个单词作为输入。当然，这里的4是超参数，可调。
+
+一般地，我们把**输入叫做context，输出叫做target**。对应到上面这句话里：
+
+- context: a glass of orange
+
+
+- target: juice
+
+
+关于**context的选择**有多种方法：
+
+- target前n个单词或后n个单词，n可调
+- target前1个单词
+- **target附近某1个单词（Skip-Gram）**
+
+##### Skip-Gram模型/Word2Vec算法
