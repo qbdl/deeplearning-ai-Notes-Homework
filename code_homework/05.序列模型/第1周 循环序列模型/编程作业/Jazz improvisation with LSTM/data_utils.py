@@ -1,6 +1,7 @@
 from music_utils import * 
 from preprocess import * 
-from keras.utils import to_categorical
+# from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 
 chords, abstract_grammars = get_musical_data('data/original_metheny.mid')
 corpus, tones, tones_indices, indices_tones = get_corpus_data(abstract_grammars)

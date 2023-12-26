@@ -5,7 +5,8 @@ from keras.models import Model, load_model, Sequential
 from keras.layers import Dense, Activation, Dropout, Input, Masking
 from keras.layers import LSTM
 from keras.utils.data_utils import get_file
-from keras.preprocessing.sequence import pad_sequences
+# from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import random
 import sys
@@ -54,8 +55,8 @@ def vectorization(X, Y, n_x, char_indices, Tx = 40):
     """
     
     m = len(X)
-    x = np.zeros((m, Tx, n_x), dtype=np.bool)
-    y = np.zeros((m, n_x), dtype=np.bool)
+    x = np.zeros((m, Tx, n_x), dtype=np.bool_)
+    y = np.zeros((m, n_x), dtype=np.bool_)
     for i, sentence in enumerate(X):
         for t, char in enumerate(sentence):
             x[i, t, char_indices[char]] = 1
@@ -129,7 +130,8 @@ X, Y = build_data(text, Tx, stride = 3)
 print("Vectorizing training set...")
 x, y = vectorization(X, Y, n_x = len(chars), char_indices = char_indices) 
 print("Loading model...")
-model = load_model('models/model_shakespeare_kiank_350_epoch.h5')
+# model = load_model('models/model_shakespeare_kiank_350_epoch.h5')
+model = load_model("D:/WorkSpace/deeplearning-ai-Notes-Homework/code_homework/05.序列模型/第1周 循环序列模型/编程作业/Dinosaur lsland --Character -level language model/models/model_shakespeare_kiank_350_epoch.h5")
 
 
 def generate_output():
