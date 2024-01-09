@@ -2498,3 +2498,272 @@ $$
 ## 三、序列模型与注意力机制
 
 ### 1、基本模型
+
+**Sequence to sequence（序列）模型**在**机器翻译和语音识别**方面都有着广泛的应用。
+
+
+
+#### 机器翻译上的一个应用例子：
+
+<img src="./assets/20180402102943247.png" alt="img" style="zoom: 80%;" />
+
+针对该机器翻译问题，可以使用**“编码网络（Encoder Network）”+“解码网络（Decoder Network）”两个RNN模型组合(可使用GRU或LSTM单元)**的形式来解决。**encoder network将输入语句编码为一个特征向量，传递给decoder network，完成翻译**。具体模型结构如下图所示：
+
+<img src="./assets/20180402105516405.png" alt="img" style="zoom:80%;" />
+
+其中，**encoder vector代表了输入语句的编码特征**。这种“编码网络（encoder network）”+“解码网络（decoder network）”的模型，在实际的机器翻译应用中有着不错的效果。
+
+
+
+
+#### 图像捕捉上的一个应用例子：
+
+图像捕捉，即捕捉图像中主体动作和行为，描述图像内容。例如下面这个例子，根据图像，捕捉图像内容。
+
+<img src="./assets/20180402111305733.png" alt="img" style="zoom:80%;" />
+
+首先，可以将图片输入到CNN，例如使用预训练好的AlexNet，删去最后的softmax层，保留至最后的全连接层。则该全连接层就构成了一个图片的特征向量（编码向量），表征了图片特征信息。
+
+<img src="./assets/20180402112324842.png" alt="img" style="zoom:100%;" />
+
+然后，将encoder vector输入至RNN，即decoder network中，进行解码翻译。
+
+![img](./assets/20180402133655200.png)
+
+
+
+### 2、Seq2seq Machine Translation  vs  Language Model
+
+<img src="./assets/20180402141623315.png" alt="img" style="zoom:80%;" />
+
+#### 两者的区别与联系：
+
+- machine translation model是根据输入语句，进行翻译，生成另外一条完整语句。上图中，绿色部分表示encoder network，紫色部分表示decoder network。**decoder network与language model是相似的**。
+
+- **encoder network可以看成是language model的$a^{<0>}$，是模型的一个条件**。也就是说，在输入语句的条件下，生成正确的翻译语句。因此，**machine translation可以看成是有条件的语言模型（conditional language model）**。即两者的区别可以表现成
+
+  - 对于Language Model（$不考虑x^{<i>}输入，仅由上一个{\hat{y}^{<i>}}作为输入时$）：
+    $$
+    max\ P(y^{<1>},y^{<2>},\cdots,y^{<T_y>})
+    $$
+    
+
+  - 对于Machine Translation Model：
+    $$
+    max\ P(y^{<1>},y^{<2>},\cdots,y^{<T_y>}|x^{<1>},x^{<2>},\cdots,x^{<T_x>})
+    $$
+    
+
+<img src="./assets/image-20240109151454441.png" alt="image-20240109151454441" style="zoom:80%;" />
+
+
+
+
+
+#### 为了找到什么样的句子才能对应max的值
+
+又出现了多种方法，举一个例子：
+
+<img src="./assets/20180402144830584.png" alt="img" style="zoom:67%;" />
+
+##### 1、Greedy Search（贪心）
+
+Greedy search根据条件，**每次只寻找一个最佳单词作为翻译输出**，力求把每个单词都翻译准确。例如，首先根据输入语句，找到第一个翻译的单词“Jane”，然后再找第二个单词“is”，再继续找第三个单词“visiting”，以此类推。这也是其“贪婪”名称的由来。
+
+Greedy search存在一些缺点。首先，因为greedy search每次只搜索一个单词，**没有考虑该单词前后关系**，概率选择上有可能会出错。例如，上面翻译语句中，**第三个单词“going”比“visiting”更常见，模型很可能会错误地选择了“going”，而错失最佳翻译语句。**其次，greedy search大大增加了运算成本，降低运算速度。
+
+##### 2、Beam Search（束搜索）
+
+具体在下一部分展开。
+
+
+
+### 3、 Beam Search（束搜索）
+
+**Greedy search每次是找出预测概率最大的单词**，而**beam search则是每次找出预测概率最大的B个单词**。其中，**参数B（Beam Width）表示取概率最大的单词个数**，可调。还是上面的例子，这里令B=3。
+
+<img src="./assets/20180402144830584.png" alt="img" style="zoom:67%;" />
+
+**Step 1：**先从词汇表中找出翻译的第一个单词概率最大的B个预测单词。即找到令$P(y^{<1>}|x)$最大的B个单词
+
+​	注意：$y^{<i>}$是**softmax的输出**，训练完成后输出的即是在前i-1个y以及x的前提下，各个词的输出概率（**是一个向量**）；同时，此时的模型应该是已经训练好的，用于搜索的
+
+得到：`“jane","september","zulu"`
+
+<img src="./assets/20180408205545859.png" alt="img" style="zoom:80%;" />
+
+**Step 2：**再分别以`in，jane，september`为条件，**计算每个词汇表单词作为预测第二个单词的概率**(即从10000 * 3的单词中找到概率最大的三个），**比较的具体概率为$P(y^{<1>},y^{<2>}|x)$**，而利用上一步要存储$P(y^{<1>}|x)$以及这一步存储的$P(y^{<2>}|x，y^{<1>})$相乘即可得到需要比较的概率，即$P(\hat y^{<1>},\hat y^{<2>}|x)=P(\hat y^{<1>} | x)\cdot P(\hat y^{<2>}|x,\hat y^{<1>})$，后面几步也是如此。
+
+得到：`"in september"，"jane is"，"jane visits"`
+
+<img src="./assets/20180408211118818.png" alt="img" style="zoom:80%;" />
+
+**Step 3：**类似地，**计算每个词汇表单词作为预测第三个单词的概率**
+
+<img src="./assets/image-20240109154913830.png" alt="image-20240109154913830" style="zoom:80%;" />
+
+最后得到：`"Jane is visiting Africa in September."`
+
+如果**参数B=1，则就等同于greedy search**。实际应用中，可以根据不同的需要设置B为不同的值。一般B越大，机器翻译越准确，但同时也会增加计算复杂度。
+
+
+
+#### Beam Search的改进
+
+**原有Beam Search的问题：多个概率相乘可能会使乘积结果很小，远小于1，造成数值下溢，无法被机器准确表示**。
+$$
+arg\ max\prod_{t=1}^{T_y} P(\hat y^{<t>}|x,\hat y^{<1>},\cdots,\hat y^{<t-1>})
+$$
+​	为了解决这个问题，可以对上述乘积形式进行**取对数log运算**转化为加法，范围从0~1拉到了$-\infin$ ~ $+ \infin$，避免了无法被机器准确表示：
+$$
+arg\ max\sum_{t=1}^{T_y} log(P(\hat y^{<t>}|x,\hat y^{<1>},\cdots,\hat y^{<t-1>}))
+$$
+
+
+**无论原有还是修改后仍存在一个问题：**机器**翻译的单词越多，乘积形式或求和形式得到的概率就越小（由于P值都<=1），这样会造成模型倾向于选择单词数更少的翻译语句**，使机器翻译受单词数目的影响，这显然是不太合适的。
+
+​	为了解决这个问题，一种改进方式是**进行长度归一化，消除语句长度影响**。
+$$
+arg\ max\ \frac{1}{T_y}\sum_{t=1}^{T_y} P(\hat y^{<t>}|x,\hat y^{<1>},\cdots,\hat y^{<t-1>})
+$$
+​	实际应用中，通常会引入归一化因子：
+$$
+arg\ max\ \frac{1}{T_y^{\alpha}}\sum_{t=1}^{T_y} P(\hat y^{<t>}|x,\hat y^{<1>},\cdots,\hat y^{<t-1>})
+$$
+​	一般令 α=0.7，效果不错。
+
+​	注意：与BFS (Breadth First Search) 、DFS (Depth First Search)算法不同，**beam search**运算速度更快，但是**并不保证一定能找到正确的翻译语句**。
+
+
+
+#### Beam Search的误差分析
+
+Beam search是一种近似搜索算法。实际应用中，如果机器翻译效果不好，需要通过错误分析，**判断是RNN模型问题还是beam search算法问题。**
+
+举例进行误差分析，例如其中一个句子：
+
+`Jane visite l’Afrique en septembre.`
+
+​	`Human: Jane visits Africa in September.`(记作 y*)
+
+​	`Algorithm: Jane visited Africa last September.`(记作 y^)
+
+
+
+**方法：**将输入语句输入到RNN模型中，**分别计算输出是y^的概率和y * 的概率**，即$P( \hat{y}|x)$和$P(y^*|x)$，进行比较并分析。
+
+- $P( y^*|x)>P(\hat{y}|x)$：Beam search算法有误
+
+- $P( y^*|x) \leq P(\hat{y}|x)$：RNN模型有误
+
+  ​	最后对所有例子进行统计，计算出RNN模型有误与Beam search算法有误的比例。
+
+  ​	如果beam search算法表现不佳，可以调试参数B；若RNN模型不好，则可以增加网络层数，使用正则化，增加训练样本数目等方法来优化。更多错误分析方法，可以参照前面的笔记（`第三门课 结构化机器学习项目`）
+
+
+
+### 4、Bleu Score
+
+Bleu：bilingual evaluation understudy(双语评估替补)
+
+使用Bleu score，**对机器翻译进行打分，评价的是“与参考(reference)相近的程度”**(因为机器翻译通常有多个不错的翻译（非唯一），所以它是**给出几个不错的reference，然后按照一定规则给生成的机器翻译句子打分**)
+
+
+
+**Bleu Score的目标**：机器翻译**越接近参考的人工翻译，其得分越高**，方法原理就是看机器翻译的各个单词是否出现在参考翻译中。
+
+例子：
+
+`French: Le chat est sur le tapis.`
+
+​	`Reference 1: The cat is on the mat.`
+
+​	`Reference 2: There is a cat on the mat.`
+
+​	`MT(machine translation) output: the the the the the the the.`
+
+
+
+#### Unigram：对单个词打分
+
+- **Method 1：**最简单的精确度评价方法是看**机器翻译的每个单词是否出现在参考翻译中**。
+  - **分母为机器翻译单词数目，分子为相应单词是否出现在参考翻译中**。这样例子中的MT $\mathbf{precision}=\frac{7}{7}=1$，显然这种方法很不科学。
+
+
+
+- **改进版 Method 2：**看**机器翻译单词出现在 各reference语句中的次数 ，取最大次数**，记为**$Count_{Clip}$**。
+  - 上述例子对应的 $\mathbf{precision}=\frac{2}{7}$，其中，**分母为机器翻译单词数目，分子为相应单词出现在参考翻译中的次数**（分子为2是因为“the”在参考1中出现了两次）。这种评价方法较为准确。
+
+
+
+#### Bigrams:  对两个单词打分
+
+进一步，之前是对单个词打分(unigram)，**现在对两个单词打分**(bigrams)，以两个为一个整体
+
+例子如下：
+
+`French: Le chat est sur le tapis.`
+
+​	`Reference 1: The cat is on the mat.`
+
+​	`Reference 2: There is a cat on the mat.`
+
+​	`MT output: The cat the cat on the mat.`
+
+对MT output进行分解，得到的**bigrams**相关内容如下表：
+
+|         | Count(MT里全部二元词组的个数) | Count_Clip(机器翻译单词出现在 各reference语句中的次数中的最大次数) |
+| ------- | ----------------------------- | ------------------------------------------------------------ |
+| the cat | 2                             | 1                                                            |
+| cat the | 1                             | 0                                                            |
+| cat on  | 1                             | 1                                                            |
+| on the  | 1                             | 1                                                            |
+| the mat | 1                             | 1                                                            |
+
+对应$\mathbf{precision}=\frac{count_{clip}}{count}=\frac{1+0+1+1+1}{2+1+1+1+1}=\frac46=\frac23$，
+
+即**分母为MT里总二元组个数，分子为各二元组出现在reference中的最大次数 的和**
+
+
+
+#### n-grams：对n个连续单词打分
+
+<img src="./assets/20180409212110400.png" alt="img" style="zoom:80%;" />
+
+
+
+进一步优化，可以同时计算，再对其求平均（也可以是加权平均）：
+$$
+\mathbf{precision}=\frac1n\sum_{i=1}^np_i\\
+or \ \mathbf{precision}=\sum_{i=1}^n w_ip_i \ , \ sum(w_i)=1\\
+$$
+​	其中，$p_i$为i-gram的precision得分。
+
+至此，还**存在一个问题：如果机器偷懒只是吐出很短的句子，那么它也很可能骗取特别高的分数，**所以我们需要让机器生成尽可能多的 Reference 中出现的词，得到与 Reference 差不多长度的文本。
+
+**对上式进行指数处理，并引入参数因子brevity penalty，记为BP**。顾名思义，BP是为了“惩罚”机器翻译语句过短而造成的得分“虚高”的情况,这样就得到最终的Bleu Score。
+
+
+
+#### Bleu Score：
+
+$$
+\begin{align*}
+& Bleu\_Score=BP\cdot e^{\sum_{i=1}^n w_ip_i}\\
+& BP = \begin{cases} 
+
+1 & \text{if } MT\_output\_length > reference\_output\_length \\
+e^{1 - \frac{reference\_output\_length}{MT\_output\_length}} & 
+\text{if } MT\_output\_length \leq reference\_output\_length
+
+\end{cases}
+\end{align*}
+$$
+
+其中n通常取 4 。
+
+
+
+
+
+### 5、注意力模型 Attention Model
