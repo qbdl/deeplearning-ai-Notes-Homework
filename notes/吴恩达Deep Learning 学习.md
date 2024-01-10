@@ -2547,7 +2547,6 @@ $$
     max\ P(y^{<1>},y^{<2>},\cdots,y^{<T_y>})
     $$
     
-
   - 对于Machine Translation Model：
     $$
     max\ P(y^{<1>},y^{<2>},\cdots,y^{<T_y>}|x^{<1>},x^{<2>},\cdots,x^{<T_x>})
@@ -2902,3 +2901,8 @@ Attention model的一个缺点是其计算量较大，若输入句子长度为$T
 
 <img src="./assets/20180411103552354.png" alt="img" style="zoom:80%;" />
 
+
+
+# 留个小小总结：
+
+ DeepLearning 小白经过断断续续的半年学习，终于学到了最后！芜湖！微微庆祝一下！！:laughing:

@@ -1,6 +1,8 @@
 # deeplearning-ai-Notes-Homework  ![redis](https://img.shields.io/badge/qbdl-Deeplearning%20AI%20Notes%20&%20Homework-lightgreen?logo=Github)
 学习吴恩达老师deeplearning-ai[课程内容](https://mooc.study.163.com/university/deeplearning_ai#/c)，参考[deeplearning_ai_books](https://github.com/fengdu78/deeplearning_ai_books)和[吴恩达deeplearning.ai专项课程精炼笔记  ](https://blog.csdn.net/red_stone1/article/details/80207815)  完成的个人笔记整理&amp;课后编程作业
 
+总学习时长约5830min。
+
 
 
 ## 简要介绍
@@ -10,6 +12,8 @@
 
 
 ## 使用说明
+
+使用下面命令克隆笔记和代码
 
 ```powershell
 git clone https://github.com/qbdl/deeplearning-ai-Notes-Homework.git
@@ -38,6 +42,6 @@ git clone https://github.com/qbdl/deeplearning-ai-Notes-Homework.git
 
 ## 课程代码（已填写完整版）包含使用环境等
 
-百度网盘链接：
+百度网盘链接：https://pan.baidu.com/s/19LqIsy3A9nEYqzLX84ymeg?pwd=2pt4 
 
-提取码：
+提取码：2pt4 
