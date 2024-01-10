@@ -30,13 +30,14 @@ git clone https://github.com/qbdl/deeplearning-ai-Notes-Homework.git
 ## 课程代码（未填写版）
 
 百度网盘链接：https://pan.baidu.com/s/1p55-fcvK3-tmKgro84H1Bg?pwd=ig0x 
-	提取码：ig0x
+
+提取码：ig0x
 
 
 
 ## 课程代码（已填写版）不含.h5文件等
 
-见github仓库
+见该github仓库
 
 
 
