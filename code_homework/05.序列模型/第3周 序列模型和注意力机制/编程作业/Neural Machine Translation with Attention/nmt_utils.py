@@ -8,7 +8,8 @@ import keras.backend as K
 import matplotlib.pyplot as plt
 
 fake = Faker()
-fake.seed(12345)
+# fake.seed(12345)
+Faker.seed(12345)
 random.seed(12345)
 
 # Define format of the data we would like to generate

@@ -2795,6 +2795,19 @@ Attention Model仍由类似的编码网络（下）和解码网络（上）构�
     <img src="./assets/2018040922250974.png" alt="img" width="450"/>
 </center>
 
+
+
+**更具体的框架图：**
+
+​	**左边为完整的Attention Model架构，右边为左边Attention模块的具体展开**
+
+<center class="half">
+    <img src="./assets/attn_model.png" alt="attn_model" width="500"/>
+    <img src="./assets/attn_mechanism.png" alt="attn_mechanism" width="450"/>
+</center>
+
+
+
 ##### 具体内容：
 
 Attention model中选择双向RNN，可以使用GRU单元或者LSTM。由于是双向RNN，每个表示：
@@ -2888,3 +2901,4 @@ Attention model的一个缺点是其计算量较大，若输入句子长度为$T
 但是这种模型有一个缺点，就是通常训练样本语音中的触发字较非触发字数目少得多，即正负样本分布不均。一种解决办法是在出现一个触发字时，将其附近的RNN都输出1。这样就简单粗暴地增加了正样本。
 
 <img src="./assets/20180411103552354.png" alt="img" style="zoom:80%;" />
+
